@@ -17,7 +17,7 @@ import java.util.Random;
  * por eso se limitan a n <= 10_000 para evitar tiempos excesivos.
  */
 
-public class BenchmarkListStructures {
+public class Benchmark {
 
     static class Result {
         String impl;
