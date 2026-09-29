@@ -5,6 +5,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * FASE 1: MEDICIÓN DE DATOS - SOLO RECOLECTA TIEMPOS
+ * ====================================================
+ * Este programa ÚNICAMENTE mide el tiempo de ejecución.
+ * NO realiza graficación alguna (ver graficarResultados.m después).
+ * 
+ * Tamaños probados: 10, 100, 1_000, 10_000, 100_000, 1_000_000
+ * Salidas: results_list_part1.csv, results_list_part2.csv, results_list_part3.csv
+ */
+
 public class BenchmarkListStructures {
 
     static class Result {
@@ -22,20 +32,18 @@ public class BenchmarkListStructures {
 
         @Override
         public String toString() {
-            double us = timeNs / 1_000.0;  
+            double us = timeNs / 1_000.0;
             return String.format("%s,%s,%d,%d,%.3f", impl, method, n, timeNs, us);
         }
     }
 
-    
     static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
     static final int WARMUP = 2;
     static final int ITERATIONS = 5;
 
     public static void main(String[] args) throws Exception {
         long startTotal = System.currentTimeMillis();
-        
-        // PARTE 1: Métodos básicos 
+
         System.out.println("📊 PARTE 1: Benchmarking List Methods (pushFront, popFront, pushBack, popBack, find)...");
         java.util.List<Result> resultsPart1 = new ArrayList<>();
         resultsPart1.addAll(benchmarkPushFront());
@@ -44,16 +52,14 @@ public class BenchmarkListStructures {
         resultsPart1.addAll(benchmarkPopBack());
         resultsPart1.addAll(benchmarkFind());
         saveResultsToCSV("results_list_part1.csv", resultsPart1);
-        
-        // PARTE 2: Métodos con posición 
+
         System.out.println("📊 PARTE 2: Benchmarking Position-based Methods (addBefore, addAfter, erase)...");
         java.util.List<Result> resultsPart2 = new ArrayList<>();
         resultsPart2.addAll(benchmarkAddBefore());
         resultsPart2.addAll(benchmarkAddAfter());
         resultsPart2.addAll(benchmarkErase());
         saveResultsToCSV("results_list_part2.csv", resultsPart2);
-        
-        // PARTE 3: Stack y Queue
+
         System.out.println("📊 PARTE 3: Benchmarking Stack and Queue...");
         java.util.List<Result> resultsPart3 = new ArrayList<>();
         resultsPart3.addAll(benchmarkStackPush());
@@ -61,17 +67,15 @@ public class BenchmarkListStructures {
         resultsPart3.addAll(benchmarkQueueEnqueue());
         resultsPart3.addAll(benchmarkQueueDequeue());
         saveResultsToCSV("results_stack_queue.csv", resultsPart3);
-        
+
         long endTotal = System.currentTimeMillis();
         System.out.println("\n✅ MEDICIÓN COMPLETADA EN " + (endTotal - startTotal) + " ms");
         System.out.println("📁 Archivos generados:");
-        System.out.println("   - results_list_part1.csv (pushFront, popFront, pushBack, popBack, find)");
-        System.out.println("   - results_list_part2.csv (addBefore, addAfter, erase)");
-        System.out.println("   - results_stack_queue.csv (Stack push/pop, Queue enqueue/dequeue)");
+        System.out.println("   - results_list_part1.csv");
+        System.out.println("   - results_list_part2.csv");
+        System.out.println("   - results_stack_queue.csv");
         System.out.println("\n⚠️  SIGUIENTE PASO: Ejecutar graficarResultados.m en MATLAB");
     }
-
-    // ==================== BENCHMARKS LISTA ====================
 
     static java.util.List<Result> benchmarkPushFront() {
         System.out.println("\n⏱️  PushFront (esperado: O(1))");
@@ -115,19 +119,19 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            long time1 = benchmarkPopFrontImpl(new SinglyLinkedList<>(), n);
+            long time1 = benchmarkPopFrontImpl(SinglyLinkedList::new, n);
             results.add(new Result("SinglyLinkedList", "popFront", n, time1));
             System.out.print(".");
 
-            long time2 = benchmarkPopFrontImpl(new SinglyLinkedListWithTail<>(), n);
+            long time2 = benchmarkPopFrontImpl(SinglyLinkedListWithTail::new, n);
             results.add(new Result("SinglyLinkedListWithTail", "popFront", n, time2));
             System.out.print(".");
 
-            long time3 = benchmarkPopFrontImpl(new DoublyLinkedList<>(), n);
+            long time3 = benchmarkPopFrontImpl(DoublyLinkedList::new, n);
             results.add(new Result("DoublyLinkedList", "popFront", n, time3));
             System.out.print(".");
 
-            long time4 = benchmarkPopFrontImpl(new DoublyLinkedListWithTail<>(), n);
+            long time4 = benchmarkPopFrontImpl(DoublyLinkedListWithTail::new, n);
             results.add(new Result("DoublyLinkedListWithTail", "popFront", n, time4));
             System.out.print(".");
         }
@@ -135,10 +139,12 @@ public class BenchmarkListStructures {
         return results;
     }
 
-    static long benchmarkPopFrontImpl(List<Integer> list, int n) {
-        for (int i = 0; i < n; i++) list.pushFront(i);
+    static long benchmarkPopFrontImpl(ListFactory factory, int n) {
         long avgNs = 0;
         for (int iter = 0; iter < ITERATIONS; iter++) {
+            List<Integer> list = factory.create();
+            for (int i = 0; i < n; i++) list.pushFront(i);
+
             long start = System.nanoTime();
             for (int i = 0; i < n; i++) list.popFront();
             avgNs += (System.nanoTime() - start);
@@ -188,19 +194,19 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            long time1 = benchmarkPopBackImpl(new SinglyLinkedList<>(), n);
+            long time1 = benchmarkPopBackImpl(SinglyLinkedList::new, n);
             results.add(new Result("SinglyLinkedList", "popBack", n, time1));
             System.out.print(".");
 
-            long time2 = benchmarkPopBackImpl(new SinglyLinkedListWithTail<>(), n);
+            long time2 = benchmarkPopBackImpl(SinglyLinkedListWithTail::new, n);
             results.add(new Result("SinglyLinkedListWithTail", "popBack", n, time2));
             System.out.print(".");
 
-            long time3 = benchmarkPopBackImpl(new DoublyLinkedList<>(), n);
+            long time3 = benchmarkPopBackImpl(DoublyLinkedList::new, n);
             results.add(new Result("DoublyLinkedList", "popBack", n, time3));
             System.out.print(".");
 
-            long time4 = benchmarkPopBackImpl(new DoublyLinkedListWithTail<>(), n);
+            long time4 = benchmarkPopBackImpl(DoublyLinkedListWithTail::new, n);
             results.add(new Result("DoublyLinkedListWithTail", "popBack", n, time4));
             System.out.print(".");
         }
@@ -208,10 +214,12 @@ public class BenchmarkListStructures {
         return results;
     }
 
-    static long benchmarkPopBackImpl(List<Integer> list, int n) {
-        for (int i = 0; i < n; i++) list.pushBack(i);
+    static long benchmarkPopBackImpl(ListFactory factory, int n) {
         long avgNs = 0;
         for (int iter = 0; iter < ITERATIONS; iter++) {
+            List<Integer> list = factory.create();
+            for (int i = 0; i < n; i++) list.pushBack(i);
+
             long start = System.nanoTime();
             for (int i = 0; i < n; i++) list.popBack();
             avgNs += (System.nanoTime() - start);
@@ -266,19 +274,19 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            long time1 = benchmarkAddBeforeImpl(new SinglyLinkedList<>(), n);
+            long time1 = benchmarkAddBeforeImpl(SinglyLinkedList::new, n);
             results.add(new Result("SinglyLinkedList", "addBefore", n, time1));
             System.out.print(".");
 
-            long time2 = benchmarkAddBeforeImpl(new SinglyLinkedListWithTail<>(), n);
+            long time2 = benchmarkAddBeforeImpl(SinglyLinkedListWithTail::new, n);
             results.add(new Result("SinglyLinkedListWithTail", "addBefore", n, time2));
             System.out.print(".");
 
-            long time3 = benchmarkAddBeforeImpl(new DoublyLinkedList<>(), n);
+            long time3 = benchmarkAddBeforeImpl(DoublyLinkedList::new, n);
             results.add(new Result("DoublyLinkedList", "addBefore", n, time3));
             System.out.print(".");
 
-            long time4 = benchmarkAddBeforeImpl(new DoublyLinkedListWithTail<>(), n);
+            long time4 = benchmarkAddBeforeImpl(DoublyLinkedListWithTail::new, n);
             results.add(new Result("DoublyLinkedListWithTail", "addBefore", n, time4));
             System.out.print(".");
         }
@@ -286,11 +294,13 @@ public class BenchmarkListStructures {
         return results;
     }
 
-    static long benchmarkAddBeforeImpl(List<Integer> list, int n) {
-        Position<Integer> pos = list.pushBack(0);
-        for (int i = 1; i < n; i++) list.pushBack(i);
+    static long benchmarkAddBeforeImpl(ListFactory factory, int n) {
         long avgNs = 0;
         for (int iter = 0; iter < ITERATIONS; iter++) {
+            List<Integer> list = factory.create();
+            Position<Integer> pos = list.pushBack(0);
+            for (int i = 1; i < n; i++) list.pushBack(i);
+
             long start = System.nanoTime();
             for (int i = 0; i < Math.min(100, n); i++) {
                 list.addBefore(pos, -1);
@@ -305,19 +315,19 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            long time1 = benchmarkAddAfterImpl(new SinglyLinkedList<>(), n);
+            long time1 = benchmarkAddAfterImpl(SinglyLinkedList::new, n);
             results.add(new Result("SinglyLinkedList", "addAfter", n, time1));
             System.out.print(".");
 
-            long time2 = benchmarkAddAfterImpl(new SinglyLinkedListWithTail<>(), n);
+            long time2 = benchmarkAddAfterImpl(SinglyLinkedListWithTail::new, n);
             results.add(new Result("SinglyLinkedListWithTail", "addAfter", n, time2));
             System.out.print(".");
 
-            long time3 = benchmarkAddAfterImpl(new DoublyLinkedList<>(), n);
+            long time3 = benchmarkAddAfterImpl(DoublyLinkedList::new, n);
             results.add(new Result("DoublyLinkedList", "addAfter", n, time3));
             System.out.print(".");
 
-            long time4 = benchmarkAddAfterImpl(new DoublyLinkedListWithTail<>(), n);
+            long time4 = benchmarkAddAfterImpl(DoublyLinkedListWithTail::new, n);
             results.add(new Result("DoublyLinkedListWithTail", "addAfter", n, time4));
             System.out.print(".");
         }
@@ -325,11 +335,13 @@ public class BenchmarkListStructures {
         return results;
     }
 
-    static long benchmarkAddAfterImpl(List<Integer> list, int n) {
-        Position<Integer> pos = list.pushBack(0);
-        for (int i = 1; i < n; i++) list.pushBack(i);
+    static long benchmarkAddAfterImpl(ListFactory factory, int n) {
         long avgNs = 0;
         for (int iter = 0; iter < ITERATIONS; iter++) {
+            List<Integer> list = factory.create();
+            Position<Integer> pos = list.pushBack(0);
+            for (int i = 1; i < n; i++) list.pushBack(i);
+
             long start = System.nanoTime();
             for (int i = 0; i < Math.min(100, n); i++) {
                 list.addAfter(pos, -1);
@@ -344,19 +356,19 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            long time1 = benchmarkEraseImpl(new SinglyLinkedList<>(), n);
+            long time1 = benchmarkEraseImpl(SinglyLinkedList::new, n);
             results.add(new Result("SinglyLinkedList", "erase", n, time1));
             System.out.print(".");
 
-            long time2 = benchmarkEraseImpl(new SinglyLinkedListWithTail<>(), n);
+            long time2 = benchmarkEraseImpl(SinglyLinkedListWithTail::new, n);
             results.add(new Result("SinglyLinkedListWithTail", "erase", n, time2));
             System.out.print(".");
 
-            long time3 = benchmarkEraseImpl(new DoublyLinkedList<>(), n);
+            long time3 = benchmarkEraseImpl(DoublyLinkedList::new, n);
             results.add(new Result("DoublyLinkedList", "erase", n, time3));
             System.out.print(".");
 
-            long time4 = benchmarkEraseImpl(new DoublyLinkedListWithTail<>(), n);
+            long time4 = benchmarkEraseImpl(DoublyLinkedListWithTail::new, n);
             results.add(new Result("DoublyLinkedListWithTail", "erase", n, time4));
             System.out.print(".");
         }
@@ -364,11 +376,13 @@ public class BenchmarkListStructures {
         return results;
     }
 
-    static long benchmarkEraseImpl(List<Integer> list, int n) {
-        java.util.List<Position<Integer>> positions = new ArrayList<>();
-        for (int i = 0; i < n; i++) positions.add(list.pushBack(i));
+    static long benchmarkEraseImpl(ListFactory factory, int n) {
         long avgNs = 0;
         for (int iter = 0; iter < ITERATIONS; iter++) {
+            List<Integer> list = factory.create();
+            java.util.List<Position<Integer>> positions = new ArrayList<>();
+            for (int i = 0; i < n; i++) positions.add(list.pushBack(i));
+
             long start = System.nanoTime();
             for (int i = 0; i < Math.min(100, n); i++) {
                 list.erase(positions.get(i));
@@ -377,8 +391,6 @@ public class BenchmarkListStructures {
         }
         return avgNs / ITERATIONS;
     }
-
-    // ==================== BENCHMARKS STACK ====================
 
     static java.util.List<Result> benchmarkStackPush() {
         System.out.println("⏱️  Stack.push() (esperado: O(1) amortizado)");
@@ -401,12 +413,16 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            MyStack<Integer> stack = new MyStack<>();
-            for (int i = 0; i < n; i++) stack.push(i);
-            long time = measureAvg(() -> {
+            long time = 0;
+            for (int iter = 0; iter < ITERATIONS; iter++) {
+                MyStack<Integer> stack = new MyStack<>();
+                for (int i = 0; i < n; i++) stack.push(i);
+
+                long start = System.nanoTime();
                 for (int i = 0; i < n; i++) stack.pop();
-            });
-            results.add(new Result("MyStack", "pop", n, time));
+                time += (System.nanoTime() - start);
+            }
+            results.add(new Result("MyStack", "pop", n, time / ITERATIONS));
             System.out.print(".");
         }
         System.out.println(" ✓");
@@ -434,25 +450,30 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            MyQueue<Integer> queue = new MyQueue<>();
-            for (int i = 0; i < n; i++) queue.enqueue(i);
-            long time = measureAvg(() -> {
+            long time = 0;
+            for (int iter = 0; iter < ITERATIONS; iter++) {
+                MyQueue<Integer> queue = new MyQueue<>();
+                for (int i = 0; i < n; i++) queue.enqueue(i);
+
+                long start = System.nanoTime();
                 for (int i = 0; i < n; i++) queue.dequeue();
-            });
-            results.add(new Result("MyQueue", "dequeue", n, time));
+                time += (System.nanoTime() - start);
+            }
+            results.add(new Result("MyQueue", "dequeue", n, time / ITERATIONS));
             System.out.print(".");
         }
         System.out.println(" ✓");
         return results;
     }
 
-    // ==================== UTILIDADES ====================
+    @FunctionalInterface
+    interface ListFactory {
+        List<Integer> create();
+    }
 
     static long measureAvg(Runnable task) {
-        // Warmup
         for (int i = 0; i < WARMUP; i++) task.run();
 
-        // Mediciones reales
         long totalNs = 0;
         for (int i = 0; i < ITERATIONS; i++) {
             System.gc();
