@@ -12,7 +12,9 @@ import java.util.Random;
  * NO realiza graficación alguna (ver graficarResultados.m después).
  * 
  * Tamaños probados: 10, 100, 1_000, 10_000, 100_000, 1_000_000
- * Salidas: results_list_part1.csv, results_list_part2.csv, results_list_part3.csv
+ * 
+ * NOTA: SinglyLinkedList.pushBack y SinglyLinkedList.popBack son O(n²)
+ * por eso se limitan a n <= 10_000 para evitar tiempos excesivos.
  */
 
 public class BenchmarkListStructures {
@@ -60,7 +62,7 @@ public class BenchmarkListStructures {
         resultsPart2.addAll(benchmarkErase());
         saveResultsToCSV("results_list_part2.csv", resultsPart2);
 
-        System.out.println("�� PARTE 3: Benchmarking Stack and Queue...");
+        System.out.println("📊 PARTE 3: Benchmarking Stack and Queue...");
         java.util.List<Result> resultsPart3 = new ArrayList<>();
         resultsPart3.addAll(benchmarkStackPush());
         resultsPart3.addAll(benchmarkStackPop());
@@ -166,11 +168,16 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            List<Integer> sll = new SinglyLinkedList<>();
-            long time1 = measureAvg(() -> {
-                for (int i = 0; i < n; i++) sll.pushBack(i);
-            }, n);
-            results.add(new Result("SinglyLinkedList", "pushBack", n, time1));
+            // SinglyLinkedList es O(n²), solo medir hasta 10_000
+            if (n <= 10_000) {
+                List<Integer> sll = new SinglyLinkedList<>();
+                long time1 = measureAvg(() -> {
+                    for (int i = 0; i < n; i++) sll.pushBack(i);
+                }, n);
+                results.add(new Result("SinglyLinkedList", "pushBack", n, time1));
+            } else {
+                System.out.print("⊘");  // Indicador de que se saltó
+            }
             System.out.print(".");
 
             List<Integer> sllwt = new SinglyLinkedListWithTail<>();
@@ -203,8 +210,13 @@ public class BenchmarkListStructures {
         java.util.List<Result> results = new ArrayList<>();
 
         for (int n : SIZES) {
-            long time1 = benchmarkPopBackImpl(SinglyLinkedList::new, n);
-            results.add(new Result("SinglyLinkedList", "popBack", n, time1));
+            // SinglyLinkedList es O(n²), solo medir hasta 10_000
+            if (n <= 10_000) {
+                long time1 = benchmarkPopBackImpl(SinglyLinkedList::new, n);
+                results.add(new Result("SinglyLinkedList", "popBack", n, time1));
+            } else {
+                System.out.print("⊘");  // Indicador de que se saltó
+            }
             System.out.print(".");
 
             long time2 = benchmarkPopBackImpl(SinglyLinkedListWithTail::new, n);
