@@ -5,16 +5,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Random;
 
-/**
- * FASE 1: MEDICIÓN DE DATOS - SOLO RECOLECTA TIEMPOS
- * ====================================================
- * Este programa ÚNICAMENTE mide el tiempo de ejecución.
- * NO realiza graficación alguna (ver graficarResultados.m después).
- * 
- * Tamaños probados: 10, 100, 1_000, 10_000, 100_000, 1_000_000
- * Salidas: results_list_part1.csv, results_list_part2.csv, results_list_part3.csv
- */
-
 public class BenchmarkListStructures {
 
     static class Result {
@@ -32,13 +22,12 @@ public class BenchmarkListStructures {
 
         @Override
         public String toString() {
-            double us = timeNs / 1_000.0;  // Microsegundos para mejor visualización
+            double us = timeNs / 1_000.0;  
             return String.format("%s,%s,%d,%d,%.3f", impl, method, n, timeNs, us);
         }
     }
 
-    // Tamaños según el requisito: 10, 100, 10^4, 10^6, 10^8
-    // Nota: 10^8 puede ser muy lento para SinglyLinkedList (O(n²) en algunos métodos)
+    
     static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
     static final int WARMUP = 2;
     static final int ITERATIONS = 5;
@@ -46,7 +35,7 @@ public class BenchmarkListStructures {
     public static void main(String[] args) throws Exception {
         long startTotal = System.currentTimeMillis();
         
-        // PARTE 1: Métodos básicos List (O(1) y O(n))
+        // PARTE 1: Métodos básicos 
         System.out.println("📊 PARTE 1: Benchmarking List Methods (pushFront, popFront, pushBack, popBack, find)...");
         java.util.List<Result> resultsPart1 = new ArrayList<>();
         resultsPart1.addAll(benchmarkPushFront());
@@ -56,7 +45,7 @@ public class BenchmarkListStructures {
         resultsPart1.addAll(benchmarkFind());
         saveResultsToCSV("results_list_part1.csv", resultsPart1);
         
-        // PARTE 2: Métodos con posición (AddBefore, AddAfter, Erase)
+        // PARTE 2: Métodos con posición 
         System.out.println("📊 PARTE 2: Benchmarking Position-based Methods (addBefore, addAfter, erase)...");
         java.util.List<Result> resultsPart2 = new ArrayList<>();
         resultsPart2.addAll(benchmarkAddBefore());
